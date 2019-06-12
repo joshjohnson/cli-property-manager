@@ -112,6 +112,8 @@ const prepareSettings = function(dependencies, procEnv, utils) {
 
     devopsSettings.edgeGridConfig = prepareEdgeGridConfig(utils, devopsSettings, dependencies);
 
+    devopsSettings.accountKey = dependencies.accountKey
+
     return devopsSettings;
 };
 
@@ -229,7 +231,7 @@ const createDevOps = function(dependencies = {}) {
 
     function getPAPI() {
         return getOrCreate("papi", () => {
-            return new papiClass(getOpenClient());
+            return new papiClass(getOpenClient(), devopsSettings.accountKey);
         });
     }
 

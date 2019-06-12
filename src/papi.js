@@ -24,8 +24,21 @@ const ActivationType = require('./enums/ActivationType');
  * PAPI REST client
  */
 class PAPI {
-    constructor(openClient) {
+    constructor(openClient, accountKey) {
         this.openClient = openClient;
+        this.accountKey = accountKey;
+    }
+
+    addAccountKey(url) {
+      if (this.accountKey) {
+        if (url.includes('?')) {
+          url += '&';
+        } else {
+          url += '?';
+        }
+        url += `accountSwitchKey=${this.accountKey}`;
+      }
+      return url;
     }
 
     findProperty(name) {
@@ -33,11 +46,11 @@ class PAPI {
             "propertyName": name
         };
 
-        return this.openClient.post('/papi/v1/search/find-by-value', searchBody);
+        return this.openClient.post(this.addAccountKey('/papi/v1/search/find-by-value'), searchBody);
     }
 
     createProperty(name, productId, contractId, groupId, ruleFormat, propertyId, propertyVersion, copyHostnames = false) {
-        let url = `/papi/v0/properties?groupId=${groupId}&contractId=${contractId}`;
+        let url = this.addAccountKey(`/papi/v0/properties?groupId=${groupId}&contractId=${contractId}`);
         let body = {
             "productId": productId,
             "propertyName": name,
@@ -60,17 +73,17 @@ class PAPI {
             createFromVersion,
             createFromVersionEtag
         };
-        let url = `/papi/v0/properties/${propertyId}/versions/`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}/versions/`);
         return this.openClient.post(url, postBody);
     }
 
     latestPropertyVersion(propertyId) {
-        let url = `/papi/v0/properties/${propertyId}/versions/latest`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}/versions/latest`);
         return this.openClient.get(url);
     }
 
     getPropertyVersion(propertyId, versionId) {
-        let url = `/papi/v0/properties/${propertyId}/versions/${versionId}`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}/versions/${versionId}`);
         return this.openClient.get(url);
     }
 
@@ -86,29 +99,29 @@ class PAPI {
      * @param usePrefixes
      */
     setClientSettings(clientSettings) {
-        let url = '/papi/v0/client-settings';
+        let url = this.addAccountKey('/papi/v0/client-settings');
         return this.openClient.put(url, clientSettings);
     }
 
     getClientSettings() {
-        let url = '/papi/v0/client-settings';
+        let url = this.addAccountKey(`/papi/v0/client-settings`);
         return this.openClient.get(url);
     }
 
     listProducts(contractId) {
-        return this.openClient.get(`/papi/v0/products?contractId=${contractId}`);
+        return this.openClient.get(this.addAccountKey(`/papi/v0/products?contractId=${contractId}`));
     }
 
     listContracts() {
-        return this.openClient.get('/papi/v0/contracts');
+        return this.openClient.get(this.addAccountKey('/papi/v0/contracts'));
     }
 
     listGroups() {
-        return this.openClient.get('/papi/v0/groups');
+        return this.openClient.get(this.addAccountKey('/papi/v0/groups'));
     }
 
     getPropertyVersionRules(propertyId, propertyVersion, ruleFormat) {
-        let url = `/papi/v0/properties/${propertyId}/versions/${propertyVersion}/rules`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}/versions/${propertyVersion}/rules`);
         let headers = {};
         if (_.isString(ruleFormat)) {
             headers.Accept = `application/vnd.akamai.papirules.${ruleFormat}+json`;
@@ -117,7 +130,7 @@ class PAPI {
     }
 
     storePropertyVersionRules(propertyId, propertyVersion, rules, ruleFormat) {
-        let url = `/papi/v0/properties/${propertyId}/versions/${propertyVersion}/rules`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}/versions/${propertyVersion}/rules`);
         let headers = {
             'Content-Type': "application/json"
         };
@@ -129,7 +142,7 @@ class PAPI {
     }
 
     validatePropertyVersionRules(propertyId, propertyVersion, rules, ruleFormat) {
-        let url = `/papi/v0/properties/${propertyId}/versions/${propertyVersion}/rules?dryRun=true`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}/versions/${propertyVersion}/rules?dryRun=true`);
         let headers = {
             'Content-Type': "application/json"
         };
@@ -142,32 +155,32 @@ class PAPI {
     }
 
     getPropertyVersionHostnames(propertyId, propertyVersion) {
-        let url = `/papi/v0/properties/${propertyId}/versions/${propertyVersion}/hostnames`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}/versions/${propertyVersion}/hostnames`);
         return this.openClient.get(url);
     }
 
     storePropertyVersionHostnames(propertyId, propertyVersion, hostnames, contractId, groupId) {
-        let url = `/papi/v0/properties/${propertyId}/versions/${propertyVersion}/hostnames?contractId=${contractId}&groupId=${groupId}`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}/versions/${propertyVersion}/hostnames?contractId=${contractId}&groupId=${groupId}`);
         return this.openClient.put(url, hostnames);
     }
 
     listCpcodes(contractId, groupId) {
-        let url = `/papi/v0/cpcodes?contractId=${contractId}&groupId=${groupId}`;
+        let url = this.addAccountKey(`/papi/v0/cpcodes?contractId=${contractId}&groupId=${groupId}`);
         return this.openClient.get(url);
     }
 
     listEdgeHostnames(contractId, groupId) {
-        let url = `/papi/v0/edgehostnames/?contractId=${contractId}&groupId=${groupId}`;
+        let url = this.addAccountKey(`/papi/v0/edgehostnames/?contractId=${contractId}&groupId=${groupId}`);
         return this.openClient.get(url);
     }
 
     createEdgeHostname(contractId, groupId, createRequestBody) {
-        let url = `/papi/v0/edgehostnames/?contractId=${contractId}&groupId=${groupId}`;
+        let url = this.addAccountKey(`/papi/v0/edgehostnames/?contractId=${contractId}&groupId=${groupId}`);
         return this.openClient.post(url, createRequestBody);
     }
 
     activateProperty(propertyId, propertyVersion, network, notifyEmails, message, activationType = ActivationType.ACTIVATE) {
-        const url = `/papi/v0/properties/${propertyId}/activations`;
+        const url = this.addAccountKey(`/papi/v0/properties/${propertyId}/activations`);
         const acknowledgeAllWarnings = true;
         const complianceRecord = {
             noncomplianceReason: "NO_PRODUCTION_TRAFFIC"
@@ -185,22 +198,22 @@ class PAPI {
     }
 
     propertyActivateStatus(propertyId) {
-        const url = `/papi/v0/properties/${propertyId}/activations`;
+        const url = this.addAccountKey(`/papi/v0/properties/${propertyId}/activations`);
         return this.openClient.get(url);
     }
 
     activationStatus(propertyId, activationId) {
-        let url = `/papi/v0/properties/${propertyId}/activations/${activationId}`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}/activations/${activationId}`);
         return this.openClient.get(url);
     }
 
     listRuleFormats() {
-        let url = `/papi/v0/rule-formats`;
+        let url = this.addAccountKey(`/papi/v0/rule-formats`);
         return this.openClient.get(url);
     }
 
     getPropertyInfo(propertyId) {
-        let url = `/papi/v0/properties/${propertyId}`;
+        let url = this.addAccountKey(`/papi/v0/properties/${propertyId}`);
         return this.openClient.get(url);
     }
 

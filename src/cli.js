@@ -118,12 +118,14 @@ module.exports = function(cmdArgs = process.argv, procEnv = process.env,
         let clientType = "regular";
         let outputFormat;
         let section;
+        let accountKey;
         if (options.parent) {
             let parentOptions = options.parent;
             if (parentOptions.format) {
                 outputFormat = parentOptions.format;
             }
             section = parentOptions.section;
+            accountKey = parentOptions.accountKey;
         }
         logging.log4jsLogging(useVerboseLogging(options), 'devops');
 
@@ -139,7 +141,8 @@ module.exports = function(cmdArgs = process.argv, procEnv = process.env,
             clientType,
             section,
             version,
-            outputFormat
+            outputFormat,
+            accountKey
         });
     };
 
@@ -456,6 +459,7 @@ module.exports = function(cmdArgs = process.argv, procEnv = process.env,
         .option('-v, --verbose', 'Verbose output, show logging on stdout')
         .option('-s, --section [section]', 'Section name representing Client ID in .edgerc file, defaults to "credentials"')
         .option('-f, --format [format]', "Select output format, allowed values are 'json' or 'table'")
+        .option('-k, --account-key <accountKey>', "Account Key")
 
     commander
         .command("new-pipeline [environments...]", "Create a new pipeline with provided attributes. " +
